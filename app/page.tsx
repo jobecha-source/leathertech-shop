@@ -24,7 +24,7 @@ const PRODUCTS: Product[] = [
     description: 'Smooth finish, controlled flatness for valves & compressors.',
     priceCents: 578,
     stripePriceId: 'price_valve_leather_test',
-    image: '/cierre valvula.jpg',
+    image: '/Cierre valvula.jpg',
   },
   {
     id: 'leather-washer',
