@@ -30,13 +30,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid items' }, { status: 400 });
     }
 
-   const session = await stripe.checkout.sessions.create({
+  const session = await stripe.checkout.sessions.create({
   mode: 'payment',
   line_items,
   success_url: process.env.STRIPE_SUCCESS_URL!,
   cancel_url: process.env.STRIPE_CANCEL_URL!,
-  customer_creation: 'always', // <- añade esto
+  customer_creation: 'always', // ✅ crea/asocia un Customer para enviar el recibo al email del comprador
 });
+```
 
 
     return NextResponse.json({ url: session.url });
