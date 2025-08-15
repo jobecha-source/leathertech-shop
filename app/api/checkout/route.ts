@@ -11,9 +11,9 @@ export async function POST(req: NextRequest) {
 
     // productId -> Stripe Price ID (modo test)
    const priceMap: Record<string, string> = {
-  'cup-washer': 'price_1RwOOJKqzrBffaobcI9AD0sM',
+  'cup-washer': 'price_1RwONbKqzrBffaobVvlewkrf',
   'valve-leather': 'price_1RwOO2KqzrBffaob241fs0C7',
-  'leather-washer': 'price_1RwONbKqzrBffaobVvlewkrf',
+  'leather-washer': 'price_1RwOOJKqzrBffaobcI9AD0sM' ,
 };
 
     // 👇 SIN apiVersion
