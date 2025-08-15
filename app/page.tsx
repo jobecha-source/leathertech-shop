@@ -9,7 +9,6 @@ export type Product = {
   stripePriceId: string;
 };
 
-```ts
 const PRODUCTS: Product[] = [
   {
     id: 'cup-washer',
