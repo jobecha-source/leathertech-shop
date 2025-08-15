@@ -30,13 +30,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid items' }, { status: 400 });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items,
-      success_url: process.env.STRIPE_SUCCESS_URL!,
-      cancel_url: process.env.STRIPE_CANCEL_URL!,
-      customer_creation: 'always', // crea/asocia un Customer para emails de recibo
-    });
+  const session = await stripe.checkout.sessions.create({
+  mode: 'payment',
+  line_items,
+  success_url: process.env.STRIPE_SUCCESS_URL!,   // ideal: ?session_id={CHECKOUT_SESSION_ID}
+  cancel_url: process.env.STRIPE_CANCEL_URL!,
+
+  // Recomendados:
+  customer_creation: 'always',                    // para que Stripe tenga email/cliente
+  billing_address_collection: 'required',         // pide dirección de facturación
+  phone_number_collection: { enabled: true },     // pide teléfono
+  tax_id_collection: { enabled: true },           // NIF/VAT si aplica
+  automatic_tax: { enabled: true },               // IVA automático (configura tu negocio en Stripe)
+
+  // Envíos (ajusta países, precio y plazos):
+  shipping_address_collection: { allowed_countries: ['ES','PT','FR','DE','IT'] },
+  shipping_options: [{
+    shipping_rate_data: {
+      type: 'fixed_amount',
+      fixed_amount: { amount: 500, currency: 'eur' }, // 5,00 €
+      display_name: 'Envío estándar (2–5 días)',
+      delivery_estimate: {
+        minimum: { unit: 'business_day', value: 2 },
+        maximum: { unit: 'business_day', value: 5 },
+      },
+    },
+  }],
+});
 
 
     return NextResponse.json({ url: session.url });
