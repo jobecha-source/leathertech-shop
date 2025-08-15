@@ -10,11 +10,11 @@ export async function POST(req: NextRequest) {
     }
 
     // productId -> Stripe Price ID (modo test)
-    const priceMap: Record<string, string> = {
-      'cup-washer': 'price_cup_washer_test',
-      'valve-leather': 'price_valve_leather_test',
-      'leather-washer': 'price_leather_washer_test',
-    };
+   const priceMap: Record<string, string> = {
+  'cup-washer': 'price_1RwOOJKqzrBffaobcI9AD0sM',
+  'valve-leather': 'price_1RwOO2KqzrBffaob241fs0C7',
+  'leather-washer': 'price_1RwONbKqzrBffaobVvlewkrf',
+};
 
     // 👇 SIN apiVersion
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
