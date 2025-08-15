@@ -15,27 +15,28 @@ const PRODUCTS: Product[] = [
     id: 'cup-washer',
     name: 'Leather Cup Washer',
     description: 'Oil/fuel resistant leather; precise ID/OD & thickness.',
-    priceCents: 1000, // 10,00 €
+    priceCents: 1000,
     stripePriceId: 'price_cup_washer_test',
-    image: '/Ilemos 2.jpg', // Asegúrate que existe en /public
+    image: '/Ilemos%202.JPG',          // <-- espacio codificado y .JPG en mayúsculas
   },
   {
     id: 'valve-leather',
     name: 'Valve Leather Disc',
     description: 'Smooth finish, controlled flatness for valves & compressors.',
-    priceCents: 578, // 5,78 €
+    priceCents: 578,
     stripePriceId: 'price_valve_leather_test',
-    image: '/Cierre valvula.jpg',
+    image: '/Cierre%20valvula.JPG',    // <-- espacio codificado y .JPG en mayúsculas
   },
   {
     id: 'leather-washer',
     name: 'Leather Washer',
     description: 'Custom die-cut washers for restoration & OEM needs.',
-    priceCents: 267, // 2,67 €
+    priceCents: 267,
     stripePriceId: 'price_leather_washer_test',
-    image: '/Racort.jpg',
+    image: '/Racort.JPG',              // <-- coincide con el nombre exacto
   },
 ];
+
 
 export type CartItem = { productId: string; qty: number };
 
