@@ -23,7 +23,7 @@ const PRODUCTS: Product[] = [
     id: 'valve-leather',
     name: 'Valve Leather Disc',
     description: 'Smooth finish, controlled flatness for valves & compressors.',
-    priceCents: 578,
+    priceCents: 400,
     stripePriceId: 'price_valve_leather_test',
     image: '/Cierre%20valvula.JPG',    // <-- espacio codificado y .JPG en mayúsculas
   },
@@ -31,7 +31,7 @@ const PRODUCTS: Product[] = [
     id: 'leather-washer',
     name: 'Leather Washer',
     description: 'Custom die-cut washers for restoration & OEM needs.',
-    priceCents: 267,
+    priceCents: 400,
     stripePriceId: 'price_leather_washer_test',
     image: '/Racort.JPG',              // <-- coincide con el nombre exacto
   },
