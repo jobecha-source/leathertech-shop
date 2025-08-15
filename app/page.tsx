@@ -9,6 +9,7 @@ export type Product = {
   stripePriceId: string;
 };
 
+```ts
 const PRODUCTS: Product[] = [
   {
     id: 'cup-washer',
@@ -16,6 +17,7 @@ const PRODUCTS: Product[] = [
     description: 'Oil/fuel resistant leather; precise ID/OD & thickness.',
     priceCents: 1000,
     stripePriceId: 'price_cup_washer_test',
+    image: '/Ilemos 2.jpg',
   },
   {
     id: 'valve-leather',
@@ -23,6 +25,7 @@ const PRODUCTS: Product[] = [
     description: 'Smooth finish, controlled flatness for valves & compressors.',
     priceCents: 578,
     stripePriceId: 'price_valve_leather_test',
+    image: '/cierre valvula.jpg',
   },
   {
     id: 'leather-washer',
@@ -30,9 +33,10 @@ const PRODUCTS: Product[] = [
     description: 'Custom die-cut washers for restoration & OEM needs.',
     priceCents: 267,
     stripePriceId: 'price_leather_washer_test',
+    image: '/Racort.jpg',
   },
 ];
-
+```
 export type CartItem = { productId: string; qty: number };
 
 export default function Page() {
