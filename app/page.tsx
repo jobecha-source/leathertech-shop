@@ -7,6 +7,7 @@ export type Product = {
   description: string;
   priceCents: number;
   stripePriceId: string;
+  image?: string; // <- añadimos imagen opcional
 };
 
 const PRODUCTS: Product[] = [
@@ -14,15 +15,15 @@ const PRODUCTS: Product[] = [
     id: 'cup-washer',
     name: 'Leather Cup Washer',
     description: 'Oil/fuel resistant leather; precise ID/OD & thickness.',
-    priceCents: 1000,
+    priceCents: 1000, // 10,00 €
     stripePriceId: 'price_cup_washer_test',
-    image: '/Ilemos 2.jpg',
+    image: '/Ilemos-2.jpg', // Asegúrate que existe en /public
   },
   {
     id: 'valve-leather',
     name: 'Valve Leather Disc',
     description: 'Smooth finish, controlled flatness for valves & compressors.',
-    priceCents: 578,
+    priceCents: 578, // 5,78 €
     stripePriceId: 'price_valve_leather_test',
     image: '/Cierre valvula.jpg',
   },
@@ -30,12 +31,12 @@ const PRODUCTS: Product[] = [
     id: 'leather-washer',
     name: 'Leather Washer',
     description: 'Custom die-cut washers for restoration & OEM needs.',
-    priceCents: 267,
+    priceCents: 267, // 2,67 €
     stripePriceId: 'price_leather_washer_test',
     image: '/Racort.jpg',
   },
 ];
-```
+
 export type CartItem = { productId: string; qty: number };
 
 export default function Page() {
@@ -92,14 +93,34 @@ export default function Page() {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:12 }}>
           {PRODUCTS.map(p => (
             <article key={p.id} style={{ border:'1px solid #e5e7eb', borderRadius:12, padding:12 }}>
-              <div style={{ aspectRatio:'4 / 3', background:'#f3f4f6', borderRadius:8, marginBottom:8, display:'grid', placeItems:'center' }}>
-                <span style={{ color:'#6b7280', fontSize:12 }}>Add product photo</span>
+              <div
+                style={{
+                  aspectRatio:'4 / 3',
+                  background:'#f3f4f6',
+                  borderRadius:8,
+                  marginBottom:8,
+                  overflow:'hidden',
+                  display:'grid',
+                  placeItems:'center'
+                }}
+              >
+                {p.image ? (
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
+                  />
+                ) : (
+                  <span style={{ color:'#6b7280', fontSize:12 }}>Add product photo</span>
+                )}
               </div>
               <h3 style={{ fontWeight:600 }}>{p.name}</h3>
               <p style={{ color:'#6b7280', fontSize:14 }}>{p.description}</p>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:8 }}>
                 <span style={{ fontWeight:700 }}>{(p.priceCents/100).toFixed(2)} €</span>
-                <button onClick={() => addToCart(p.id)} style={{ padding:'6px 10px', border:'1px solid #111', borderRadius:8, background:'#fff' }}>Add to cart</button>
+                <button onClick={() => addToCart(p.id)} style={{ padding:'6px 10px', border:'1px solid #111', borderRadius:8, background:'#fff' }}>
+                  Add to cart
+                </button>
               </div>
             </article>
           ))}
@@ -120,7 +141,13 @@ export default function Page() {
                     <div style={{ fontWeight:600 }}>{p.name}</div>
                     <div style={{ color:'#6b7280', fontSize:12 }}>{(p.priceCents/100).toFixed(2)} € / unit</div>
                   </div>
-                  <input type="number" min={0} value={item.qty} onChange={e => changeQty(item.productId, Number(e.target.value))} style={{ width:100, padding:6, border:'1px solid #e5e7eb', borderRadius:8 }} />
+                  <input
+                    type="number"
+                    min={0}
+                    value={item.qty}
+                    onChange={e => changeQty(item.productId, Number(e.target.value))}
+                    style={{ width:100, padding:6, border:'1px solid #e5e7eb', borderRadius:8 }}
+                  />
                   <div style={{ textAlign:'right', fontWeight:700 }}>{((p.priceCents*item.qty)/100).toFixed(2)} €</div>
                 </div>
               );
