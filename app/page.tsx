@@ -17,7 +17,7 @@ const PRODUCTS: Product[] = [
     description: 'Oil/fuel resistant leather; precise ID/OD & thickness.',
     priceCents: 1000, // 10,00 €
     stripePriceId: 'price_cup_washer_test',
-    image: '/Ilemos-2.jpg', // Asegúrate que existe en /public
+    image: '/Ilemos 2.jpg', // Asegúrate que existe en /public
   },
   {
     id: 'valve-leather',
