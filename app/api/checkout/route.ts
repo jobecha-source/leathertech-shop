@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   'cup-washer': 'price_1RwS0lKpM0dEkwAqGpLvj7se',
   'valve-leather': 'price_1RwS1dKpM0dEkwAqj82rF4Ea',
   'leather-washer': 'price_1RwS2iKpM0dEkwAqNgWt778n' ,
-   'leather-cone-cup': 'price_1Rwe7xKpM0dEkwAqi1ZgCkAZ'  
+   'leather-cone-cup': 'price_1Rwe7xKpM0dEkwAqi1ZgCkAZ',  
 };
 
     // 👇 SIN apiVersion
