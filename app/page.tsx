@@ -6,8 +6,8 @@ export type Product = {
   name: string;
   description: string;
   priceCents: number;
-  stripePriceId: string;
-  image?: string; // <- añadimos imagen opcional
+  stripePriceId: string;   // Price ID de Stripe
+  image?: string;
 };
 
 const PRODUCTS: Product[] = [
@@ -16,84 +16,89 @@ const PRODUCTS: Product[] = [
     name: 'Leather Cup Washer',
     description: 'Oil/fuel resistant leather; precise ID/OD & thickness.',
     priceCents: 1000,
-    stripePriceId: 'price_cup_washer_test',
-    image: '/Ilemos%202.JPG',          // <-- espacio codificado y .JPG en mayúsculas
+    stripePriceId: 'price_cup_washer_test',    // <-- PON AQUÍ TU price_ REAL
+    image: '/Ilemos%202.JPG',
   },
   {
     id: 'valve-leather',
     name: 'Valve Leather Disc',
     description: 'Smooth finish, controlled flatness for valves & compressors.',
     priceCents: 400,
-    stripePriceId: 'price_valve_leather_test',
-    image: '/Cierre%20valvula.JPG',    // <-- espacio codificado y .JPG en mayúsculas
+    stripePriceId: 'price_valve_leather_test', // <-- PON AQUÍ TU price_ REAL
+    image: '/Cierre%20valvula.JPG',
   },
   {
     id: 'leather-washer',
     name: 'Leather Washer',
     description: 'Custom die-cut washers for restoration & OEM needs.',
     priceCents: 400,
-    stripePriceId: 'price_leather_washer_test',
-    image: '/Racort.JPG',              // <-- coincide con el nombre exacto
+    stripePriceId: 'price_leather_washer_test', // <-- PON AQUÍ TU price_ REAL
+    image: '/Racort.JPG',
   },
   {
-  id: 'leather cone cup',
-  name: 'Leather cone cup',
-  description: 'cone cup for pumps/valves. Custom OD/ID.',
-  priceCents: 600, // 4,50 €
-  stripePriceId: 'price_live_o_test_aqui',
-  image: '/Sombreretes.JPG',
-},
-
+    id: 'leather-cone-cup', // sin espacios
+    name: 'Leather cone cup',
+    description: 'Cone cup for pumps/valves. Custom OD/ID.',
+    priceCents: 600,
+    stripePriceId: 'price_live_o_test_aqui',    // <-- PON AQUÍ TU price_ REAL
+    image: '/Sombreretes.JPG',
+  },
 ];
-
 
 export type CartItem = { productId: string; priceId: string; qty: number };
 
-const [cart, setCart] = useState<CartItem[]>([]);
+export default function Page() {
+  const [cart, setCart] = useState<CartItem[]>([]);
 
-const addToCart = (productId: string) => {
-  const p = PRODUCTS.find(pr => pr.id === productId);
-  if (!p) return; // seguridad
-  setCart(prev => {
-    const found = prev.find(i => i.productId === productId);
-    if (found) {
-      return prev.map(i => i.productId === productId ? { ...i, qty: i.qty + 1 } : i);
-    }
-    // 👇 guardamos también el priceId de Stripe
-    return [...prev, { productId, priceId: p.stripePriceId, qty: 1 }];
-  });
-};
+  const totalCents = useMemo(() => {
+    return cart.reduce((sum, item) => {
+      const p = PRODUCTS.find(pr => pr.id === item.productId);
+      return sum + (p ? p.priceCents * item.qty : 0);
+    }, 0);
+  }, [cart]);
 
-
-
-  const changeQty = (productId: string, qty: number) => {
-    if (qty <= 0) return setCart(prev => prev.filter(i => i.productId !== productId));
-    setCart(prev => prev.map(i => i.productId === productId ? { ...i, qty } : i));
+  const addToCart = (productId: string) => {
+    const p = PRODUCTS.find(pr => pr.id === productId);
+    if (!p) return;
+    setCart(prev => {
+      const found = prev.find(i => i.productId === productId);
+      if (found) {
+        return prev.map(i => i.productId === productId ? { ...i, qty: i.qty + 1 } : i);
+      }
+      // guardamos también el priceId de Stripe (lo necesita el backend)
+      return [...prev, { productId, priceId: p.stripePriceId, qty: 1 }];
+    });
   };
 
-const checkout = async () => {
-  if (cart.length === 0) return alert('Your cart is empty');
-  try {
-    const payload = { items: cart.map(({ priceId, qty }) => ({ priceId, qty })) }; // 👈 solo priceId y qty
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Checkout failed: ${txt}`);
+  const changeQty = (productId: string, qty: number) => {
+    if (qty <= 0) {
+      setCart(prev => prev.filter(i => i.productId !== productId));
+    } else {
+      setCart(prev => prev.map(i => i.productId === productId ? { ...i, qty } : i));
     }
-    const data = await res.json();
-    if (data?.url) window.location.href = data.url;
-    else throw new Error('No checkout URL received');
-  } catch (err: any) {
-    alert(err.message || 'Error during checkout');
-  }
-};
+  };
 
-
-
+  const checkout = async () => {
+    if (cart.length === 0) return alert('Your cart is empty');
+    try {
+      // El backend nuevo espera: [{ priceId, qty }]
+      const payload = { items: cart.map(({ priceId, qty }) => ({ priceId, qty })) };
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Checkout failed: ${txt}`);
+      }
+      const data = await res.json();
+      if (data?.url) window.location.href = data.url;
+      else throw new Error('No checkout URL received');
+    } catch (err: any) {
+      alert(err.message || 'Error during checkout');
+    }
+  };
 
   return (
     <main style={{ maxWidth: 1000, margin: '0 auto', padding: 16 }}>
@@ -180,6 +185,10 @@ const checkout = async () => {
           </div>
         )}
       </section>
+    </main>
+  );
+}
+
     </main>
   );
 }
