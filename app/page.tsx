@@ -1,24 +1,48 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+
+export type Variant = {
+  id: string;             // id interno (sin espacios)
+  label: string;          // lo que ve el cliente, p.ej. "Ø45 mm (1.77")"
+  stripePriceId: string;  // price_ de Stripe de esa medida
+};
 
 export type Product = {
   id: string;
   name: string;
   description: string;
   priceCents: number;
-  stripePriceId: string;   // ID de precio de Stripe (empieza por price_)
+  stripePriceId: string;
   image?: string;
+  variants?: Variant[];   // <-- NUEVO: si existe, el producto tiene medidas
+};
+
+export type CartItem = {
+  productId: string;
+  priceId: string;
+  qty: number;
+  unitPriceCents: number; // <-- guardamos el precio unitario en el momento de añadir
+  variantLabel?: string;  // <-- para mostrar en el carrito la medida elegida
 };
 
 const PRODUCTS: Product[] = [
-  {
-    id: 'cup-washer',
-    name: 'Leather Cup Washer',
-    description: 'Oil/fuel resistant leather; precise ID/OD & thickness.',
-    priceCents: 1000,
-    stripePriceId: 'price_1RwS0lKpM0dEkwAqGpLvj7se', // <-- PON AQUÍ TU price_ REAL
-    image: '/Ilemos%202.JPG',
-  },
+ {
+  id: 'cup-washer',
+  name: 'Leather Cup Washer',
+  description: 'Leather cup washer for sprayer pumps (Hardi, Ilemo, Mañez y Lozano, Abella).',
+  // priceCents y stripePriceId se ignoran cuando hay variants, pero mantenlos para compatibilidad:
+  priceCents: 0,
+  stripePriceId: 'price_placeholder',
+  image: '/Ilemos%202.JPG',
+  variants: [
+    { id: 'd45', label: 'Ø45 mm (1.77")', stripePriceId: 'price_1RwS0lKpM0dEkwAqGpLvj7se' },
+    { id: 'd50', label: 'Ø50 mm (1.97")', stripePriceId: 'price_1RwflJKpM0dEkwAqyfVOlu4i' },
+    { id: 'd55', label: 'Ø55 mm (2.17")', stripePriceId: 'price_1RwflJKpM0dEkwAqQ2u4z7rN' },
+    { id: 'd60', label: 'Ø60 mm (2.36")', stripePriceId: 'price_1RwflJKpM0dEkwAq2oDqTNbZ' },
+  ],
+},
+
   {
     id: 'valve-leather',
     name: 'Valve Leather Disc',
@@ -49,6 +73,46 @@ export type CartItem = { productId: string; priceId: string; qty: number };
 
 export default function Page() {
   const [cart, setCart] = useState<CartItem[]>([]);
+  // === PASO 3 · PRECIOS DE VARIANTES ===
+const [selected, setSelected] = useState<Record<string, string>>(
+  Object.fromEntries(
+    PRODUCTS.map(p => [p.id, p.variants && p.variants.length ? p.variants[0].id : ''])
+  )
+);
+
+const [priceMap, setPriceMap] = useState<Record<string, number>>({});
+const [priceError, setPriceError] = useState<string | null>(null);
+
+// Carga precios reales desde Stripe (vía /api/prices)
+useEffect(() => {
+  const allIds = PRODUCTS.flatMap(p => p.variants?.map(v => v.stripePriceId) || []);
+  if (allIds.length === 0) return;
+
+  fetch('/api/prices?ids=' + allIds.join(','))
+    .then(async r => {
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    })
+    .then(m => setPriceMap(m))
+    .catch(e => {
+      console.error('Price fetch failed', e);
+      setPriceError('No se pudieron cargar los precios');
+    });
+}, []);
+
+const getSelectedVariant = (p: Product) => {
+  if (!p.variants || p.variants.length === 0) return undefined;
+  const chosen = selected[p.id] || p.variants[0].id;
+  return p.variants.find(v => v.id === chosen) || p.variants[0];
+};
+
+const priceText = (priceId?: string, fallbackCents = 0) => {
+  if (!priceId) return (fallbackCents/100).toFixed(2) + ' €';
+  if (priceMap[priceId] != null) return (priceMap[priceId] / 100).toFixed(2) + ' €';
+  if (priceError) return '—';
+  return '…'; // cargando
+};
+
 
   const totalCents = useMemo(() => {
     return cart.reduce((sum, item) => {
@@ -138,7 +202,29 @@ export default function Page() {
               <h3 style={{ fontWeight:600 }}>{p.name}</h3>
               <p style={{ color:'#6b7280', fontSize:14 }}>{p.description}</p>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:8 }}>
-                <span style={{ fontWeight:700 }}>{(p.priceCents/100).toFixed(2)} €</span>
+                {p.variants?.length ? (
+  <div style={{ margin: '8px 0' }}>
+    <label style={{ fontSize:12, color:'#6b7280' }}>Size</label>
+    <select
+      value={selected[p.id] || p.variants[0].id}
+      onChange={e => setSelected(s => ({ ...s, [p.id]: e.target.value }))}
+      style={{ width:'100%', marginTop:4, padding:6, border:'1px solid #e5e7eb', borderRadius:8 }}
+    >
+      {p.variants.map(vr => (
+        <option key={vr.id} value={vr.id}>
+          {vr.label} — {priceText(vr.stripePriceId)}
+        </option>
+      ))}
+    </select>
+  </div>
+) : null}
+
+                <span style={{ fontWeight:700 }}>
+  {p.variants?.length
+    ? priceText(getSelectedVariant(p)?.stripePriceId)
+    : (p.priceCents/100).toFixed(2) + ' €'}
+</span>
+
                 <button onClick={() => addToCart(p.id)} style={{ padding:'6px 10px', border:'1px solid #111', borderRadius:8, background:'#fff' }}>
                   Add to cart
                 </button>
