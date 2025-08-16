@@ -41,7 +41,7 @@ const PRODUCTS: Product[] = [
   description: 'cone cup for pumps/valves. Custom OD/ID.',
   priceCents: 600, // 4,50 €
   stripePriceId: 'price_live_o_test_aqui',
-  image: '/leather-gasket.jpg',
+  image: '/Sombreretes.jpg',
 },
 
 ];
