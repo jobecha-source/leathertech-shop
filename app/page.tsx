@@ -35,6 +35,15 @@ const PRODUCTS: Product[] = [
     stripePriceId: 'price_leather_washer_test',
     image: '/Racort.JPG',              // <-- coincide con el nombre exacto
   },
+  {
+  id: 'leather cone cup',
+  name: 'Leather Gasket',
+  description: 'cone cup for pumps/valves. Custom OD/ID.',
+  priceCents: 600, // 4,50 €
+  stripePriceId: 'price_live_o_test_aqui',
+  image: '/leather-gasket.jpg',
+},
+
 ];
 
 
