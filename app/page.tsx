@@ -122,18 +122,58 @@ const priceText = (priceId?: string, fallbackCents = 0) => {
     }, 0);
   }, [cart]);
 
-  const addToCart = (productId: string) => {
-    const p = PRODUCTS.find(pr => pr.id === productId);
-    if (!p) return;
+ const addToCart = (productId: string) => {
+  const p = PRODUCTS.find(pr => pr.id === productId);
+  if (!p) return;
+
+  // --- productos CON variantes (ej. cup-washer) ---
+  if (p.variants && p.variants.length) {
+    const v = getSelectedVariant(p)!;
+    const unit = priceMap[v.stripePriceId] ?? 0; // céntimos
+    if (unit <= 0) { alert('Price not loaded yet. Please try again in 1–2s.'); return; }
+
     setCart(prev => {
-      const found = prev.find(i => i.productId === productId);
+      const found = prev.find(i => i.productId === p.id && i.variantLabel === v.label);
       if (found) {
-        return prev.map(i => i.productId === productId ? { ...i, qty: i.qty + 1 } : i);
+        return prev.map(i =>
+          (i.productId === p.id && i.variantLabel === v.label) ? { ...i, qty: i.qty + 1 } : i
+        );
       }
-      // guardamos también el priceId de Stripe
-      return [...prev, { productId, priceId: p.stripePriceId, qty: 1 }];
+      return [
+        ...prev,
+        {
+          productId: p.id,
+          priceId: v.stripePriceId,
+          qty: 1,
+          unitPriceCents: unit,
+          variantLabel: v.label,
+        },
+      ];
     });
-  };
+    return;
+  }
+
+  // --- productos SIN variantes (los demás) ---
+  const unit = p.priceCents; // usa el precio base del producto
+  setCart(prev => {
+    const found = prev.find(i => i.productId === productId && !i.variantLabel);
+    if (found) {
+      return prev.map(i =>
+        (i.productId === productId && !i.variantLabel) ? { ...i, qty: i.qty + 1 } : i
+      );
+    }
+    return [
+      ...prev,
+      {
+        productId,
+        priceId: p.stripePriceId,
+        qty: 1,
+        unitPriceCents: unit,   // <-- ¡este campo faltaba!
+      },
+    ];
+  });
+};
+
 
   const changeQty = (productId: string, qty: number) => {
     if (qty <= 0) {
