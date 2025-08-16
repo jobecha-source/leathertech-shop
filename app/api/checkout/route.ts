@@ -106,7 +106,20 @@ export async function POST(req: NextRequest) {
       phone_number_collection: { enabled: true },
 
       // Envío
-      shipping_address_collection: { allowed_countries: ALLOWED_TYPED },
+      shipping_address_collection: {
+  allowed_countries: [
+    // Europa
+    'ES','PT','FR','DE','IT','AT','BE','BG','HR','CY','CZ','DK','EE','FI','GR',
+    'HU','IE','LV','LT','LU','MT','NL','PL','RO','SK','SI','SE','GB','IS','NO','LI','CH',
+    'AD','MC','SM','VA','AL','BA','ME','MK','RS','XK',
+    // América
+    'US','CA','MX','AR','BO','BR','CL','CO','CR','DO','EC','GT','HN','JM','NI','PA','PE','PR','PY','SV','UY','VE',
+    // APAC / MENA
+    'AU','NZ','JP','KR','SG','HK','MY','TH','PH','VN','ID','IN',
+    'AE','SA','QA','KW','BH','OM','TR','IL','EG','MA','ZA'
+  ]
+},
+
       shipping_options: [
         {
           shipping_rate_data: {
