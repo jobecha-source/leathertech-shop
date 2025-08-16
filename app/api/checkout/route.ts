@@ -46,39 +46,81 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid items' }, { status: 400 });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items,
-      success_url: SUCCESS_URL, // ideal: /success?session_id={CHECKOUT_SESSION_ID}
-      cancel_url: CANCEL_URL,
+ // …mantén tus imports, lectura de items y line_items…
 
-      // Datos del cliente
-      customer_creation: 'always',
-      billing_address_collection: 'required',
-      phone_number_collection: { enabled: true },
+// ====== LISTAS DE PAÍSES ======
+// Opción A: Europa + UK (recomendada si vendes principalmente en Europa)
+const EU_UK: Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[] = [
+  'ES','PT','FR','DE','IT','AT','BE','BG','HR','CY','CZ','DK','EE','FI','GR',
+  'HU','IE','LV','LT','LU','MT','NL','PL','RO','SK','SI','SE','GB','IS','NO','LI','CH',
+  'AD','MC','SM','VA','AL','BA','ME','MK','RS','XK'
+];
 
-      // Envío
-      shipping_address_collection: { allowed_countries: ['ES', 'PT', 'FR', 'DE', 'IT'] },
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: { amount: 500, currency: 'eur' }, // 5,00 €
-            display_name: 'Envío estándar (2–5 días)',
-            delivery_estimate: {
-              minimum: { unit: 'business_day', value: 2 },
-              maximum: { unit: 'business_day', value: 5 },
-            },
-          },
+// Opción B: América + Europa + parte de APAC (amplia; usa si vendes “a casi todos”)
+const WIDE_LIST: Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[] = [
+  // Europa (igual que arriba)
+  'ES','PT','FR','DE','IT','AT','BE','BG','HR','CY','CZ','DK','EE','FI','GR',
+  'HU','IE','LV','LT','LU','MT','NL','PL','RO','SK','SI','SE','GB','IS','NO','LI','CH',
+  'AD','MC','SM','VA','AL','BA','ME','MK','RS','XK',
+  // América
+  'US','CA','MX','AR','BO','BR','CL','CO','CR','DO','EC','GT','HN','JM','NI','PA','PE','PR','PY','SV','UY','VE',
+  // APAC básicos
+  'AU','NZ','JP','KR','SG','HK','MY','TH','PH','VN','ID','IN','AE','SA','QA','KW','BH','OM','TR','IL','EG','MA','ZA'
+];
+
+// Elige una de las dos listas:
+const ALLOWED = EU_UK; // <-- cambia a WIDE_LIST si quieres más países
+
+const session = await stripe.checkout.sessions.create({
+  mode: 'payment',
+  line_items,
+  success_url: process.env.STRIPE_SUCCESS_URL!,
+  cancel_url: process.env.STRIPE_CANCEL_URL!,
+
+  // Idioma del Checkout
+  locale: 'es-ES',
+
+  // Datos del cliente (mostrará nombre, email, teléfono y dirección completa)
+  customer_creation: 'always',
+  billing_address_collection: 'required',
+  phone_number_collection: { enabled: true },
+
+  // Dirección de envío: país + dirección completa (calle, ciudad, CP, estado/provincia si aplica)
+  shipping_address_collection: { allowed_countries: ALLOWED },
+  shipping_options: [
+    {
+      shipping_rate_data: {
+        type: 'fixed_amount',
+        fixed_amount: { amount: 500, currency: 'eur' }, // 5,00 €
+        display_name: 'Envío estándar (2–5 días)',
+        delivery_estimate: {
+          minimum: { unit: 'business_day', value: 2 },
+          maximum: { unit: 'business_day', value: 5 },
         },
-      ],
+      },
+    },
+  ],
 
-      // Si usas cupones:
-      // allow_promotion_codes: true,
+  // Campo(s) extra opcional(es). Útil si quieres forzar “Provincia” en España o recoger NIF/DNI.
+  custom_fields: [
+    {
+      key: 'province',
+      label: { type: 'custom', custom: 'Provincia' },
+      type: 'text',
+      optional: true,
+    },
+    // Descomenta si quieres NIF/CIF:
+    // {
+    //   key: 'nif',
+    //   label: { type: 'custom', custom: 'NIF/CIF' },
+    //   type: 'text',
+    //   optional: true,
+    // },
+  ],
 
-      // Si has configurado Stripe Tax correctamente:
-      // automatic_tax: { enabled: true },
-    });
+  // automatic_tax: { enabled: true }, // sólo si lo has configurado en Stripe
+  // allow_promotion_codes: true,
+});
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
