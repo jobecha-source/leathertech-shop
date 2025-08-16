@@ -70,7 +70,7 @@ const PRODUCTS: Product[] = [
   },
 ];
 
-export type CartItem = { productId: string; priceId: string; qty: number };
+
 
 export default function Page() {
   const [cart, setCart] = useState<CartItem[]>([]);
