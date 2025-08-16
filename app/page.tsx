@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 
 export type Variant = {
-  id: string;             // id interno (sin espacios)
-  label: string;          // lo que ve el cliente, p.ej. "Ø45 mm (1.77")"
-  stripePriceId: string;  // price_ de Stripe de esa medida
+  id: string;
+  label: string;
+  stripePriceId: string;
 };
 
 export type Product = {
@@ -15,16 +15,17 @@ export type Product = {
   priceCents: number;
   stripePriceId: string;
   image?: string;
-  variants?: Variant[];   // <-- NUEVO: si existe, el producto tiene medidas
+  variants?: Variant[];   // si existe, el producto tiene medidas
 };
 
 export type CartItem = {
   productId: string;
   priceId: string;
   qty: number;
-  unitPriceCents: number; // <-- guardamos el precio unitario en el momento de añadir
-  variantLabel?: string;  // <-- para mostrar en el carrito la medida elegida
+  unitPriceCents: number; // precio unitario en céntimos
+  variantLabel?: string;  // p.ej. 'Ø50 mm (1.97")' (solo cuando hay medidas)
 };
+
 
 const PRODUCTS: Product[] = [
  {
