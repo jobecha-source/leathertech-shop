@@ -47,7 +47,7 @@ const PRODUCTS: Product[] = [
 ];
 
 
-export type CartItem = { productId: string; qty: number };
+export type CartItem = { productId: string; priceId: string; qty: number };
 
 export default function Page() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -59,35 +59,45 @@ export default function Page() {
     }, 0);
   }, [cart]);
 
-  const addToCart = (productId: string) => {
-    setCart(prev => {
-      const found = prev.find(i => i.productId === productId);
-      if (found) return prev.map(i => i.productId === productId ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { productId, qty: 1 }];
-    });
-  };
+const addToCart = (productId: string) => {
+  const p = PRODUCTS.find(pr => pr.id === productId);
+  if (!p) return;
+  setCart(prev => {
+    const found = prev.find(i => i.productId === productId);
+    if (found) {
+      return prev.map(i => i.productId === productId ? { ...i, qty: i.qty + 1 } : i);
+    }
+    return [...prev, { productId, priceId: p.stripePriceId, qty: 1 }];
+  });
+};
+
 
   const changeQty = (productId: string, qty: number) => {
     if (qty <= 0) return setCart(prev => prev.filter(i => i.productId !== productId));
     setCart(prev => prev.map(i => i.productId === productId ? { ...i, qty } : i));
   };
 
-  const checkout = async () => {
-    if (cart.length === 0) return alert('Your cart is empty');
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cart }),
-      });
-      if (!res.ok) throw new Error('Checkout failed');
-      const data = await res.json();
-      if (data?.url) window.location.href = data.url;
-      else throw new Error('No checkout URL received');
-    } catch (err: any) {
-      alert(err?.message || 'Error during checkout');
+ const checkout = async () => {
+  if (cart.length === 0) return alert('Your cart is empty');
+  try {
+    const payload = { items: cart.map(({ priceId, qty }) => ({ priceId, qty })) };
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Checkout failed: ${txt}`);
     }
-  };
+    const data = await res.json();
+    if (data?.url) window.location.href = data.url;
+    else throw new Error('No checkout URL received');
+  } catch (err:any) {
+    alert(err.message || 'Error during checkout');
+  }
+};
+
 
   return (
     <main style={{ maxWidth: 1000, margin: '0 auto', padding: 16 }}>
