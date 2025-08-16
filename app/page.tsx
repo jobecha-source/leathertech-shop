@@ -16,7 +16,7 @@ const PRODUCTS: Product[] = [
     name: 'Leather Cup Washer',
     description: 'Oil/fuel resistant leather; precise ID/OD & thickness.',
     priceCents: 1000,
-    stripePriceId: 'price_cup_washer_test',    // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_1RwS0lKpM0dEkwAqGpLvj7se',    // <-- PON AQUÍ TU price_ REAL
     image: '/Ilemos%202.JPG',
   },
   {
@@ -24,7 +24,7 @@ const PRODUCTS: Product[] = [
     name: 'Valve Leather Disc',
     description: 'Smooth finish, controlled flatness for valves & compressors.',
     priceCents: 400,
-    stripePriceId: 'price_valve_leather_test', // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_1RwS1dKpM0dEkwAqj82rF4Ea', // <-- PON AQUÍ TU price_ REAL
     image: '/Cierre%20valvula.JPG',
   },
   {
@@ -32,7 +32,7 @@ const PRODUCTS: Product[] = [
     name: 'Leather Washer',
     description: 'Custom die-cut washers for restoration & OEM needs.',
     priceCents: 400,
-    stripePriceId: 'price_leather_washer_test', // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_1RwS2iKpM0dEkwAqNgWt778n', // <-- PON AQUÍ TU price_ REAL
     image: '/Racort.JPG',
   },
   {
@@ -40,7 +40,7 @@ const PRODUCTS: Product[] = [
     name: 'Leather cone cup',
     description: 'Cone cup for pumps/valves. Custom OD/ID.',
     priceCents: 600,
-    stripePriceId: 'price_live_o_test_aqui',    // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_1Rwe7xKpM0dEkwAqi1ZgCkAZ',    // <-- PON AQUÍ TU price_ REAL
     image: '/Sombreretes.JPG',
   },
 ];
