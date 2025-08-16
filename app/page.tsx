@@ -6,7 +6,7 @@ export type Product = {
   name: string;
   description: string;
   priceCents: number;
-  stripePriceId: string;   // Price ID de Stripe
+  stripePriceId: string;   // ID de precio de Stripe (empieza por price_)
   image?: string;
 };
 
@@ -16,7 +16,7 @@ const PRODUCTS: Product[] = [
     name: 'Leather Cup Washer',
     description: 'Oil/fuel resistant leather; precise ID/OD & thickness.',
     priceCents: 1000,
-    stripePriceId: 'price_1RwS0lKpM0dEkwAqGpLvj7se',    // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_cup_washer_test', // <-- PON AQUÍ TU price_ REAL
     image: '/Ilemos%202.JPG',
   },
   {
@@ -24,7 +24,7 @@ const PRODUCTS: Product[] = [
     name: 'Valve Leather Disc',
     description: 'Smooth finish, controlled flatness for valves & compressors.',
     priceCents: 400,
-    stripePriceId: 'price_1RwS1dKpM0dEkwAqj82rF4Ea', // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_valve_leather_test', // <-- PON AQUÍ TU price_ REAL
     image: '/Cierre%20valvula.JPG',
   },
   {
@@ -32,7 +32,7 @@ const PRODUCTS: Product[] = [
     name: 'Leather Washer',
     description: 'Custom die-cut washers for restoration & OEM needs.',
     priceCents: 400,
-    stripePriceId: 'price_1RwS2iKpM0dEkwAqNgWt778n', // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_leather_washer_test', // <-- PON AQUÍ TU price_ REAL
     image: '/Racort.JPG',
   },
   {
@@ -40,7 +40,7 @@ const PRODUCTS: Product[] = [
     name: 'Leather cone cup',
     description: 'Cone cup for pumps/valves. Custom OD/ID.',
     priceCents: 600,
-    stripePriceId: 'price_1Rwe7xKpM0dEkwAqi1ZgCkAZ',    // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_live_o_test_aqui', // <-- PON AQUÍ TU price_ REAL
     image: '/Sombreretes.JPG',
   },
 ];
@@ -65,7 +65,7 @@ export default function Page() {
       if (found) {
         return prev.map(i => i.productId === productId ? { ...i, qty: i.qty + 1 } : i);
       }
-      // guardamos también el priceId de Stripe (lo necesita el backend)
+      // guardamos también el priceId de Stripe
       return [...prev, { productId, priceId: p.stripePriceId, qty: 1 }];
     });
   };
@@ -81,7 +81,7 @@ export default function Page() {
   const checkout = async () => {
     if (cart.length === 0) return alert('Your cart is empty');
     try {
-      // El backend nuevo espera: [{ priceId, qty }]
+      // El backend espera [{ priceId, qty }]
       const payload = { items: cart.map(({ priceId, qty }) => ({ priceId, qty })) };
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -185,10 +185,6 @@ export default function Page() {
           </div>
         )}
       </section>
-    </main>
-  );
-}
-
     </main>
   );
 }
