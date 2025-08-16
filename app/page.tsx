@@ -49,27 +49,21 @@ const PRODUCTS: Product[] = [
 
 export type CartItem = { productId: string; priceId: string; qty: number };
 
-export default function Page() {
-  const [cart, setCart] = useState<CartItem[]>([]);
-
-  const totalCents = useMemo(() => {
-    return cart.reduce((sum, item) => {
-      const p = PRODUCTS.find(pr => pr.id === item.productId);
-      return sum + (p ? p.priceCents * item.qty : 0);
-    }, 0);
-  }, [cart]);
+const [cart, setCart] = useState<CartItem[]>([]);
 
 const addToCart = (productId: string) => {
   const p = PRODUCTS.find(pr => pr.id === productId);
-  if (!p) return;
+  if (!p) return; // seguridad
   setCart(prev => {
     const found = prev.find(i => i.productId === productId);
     if (found) {
       return prev.map(i => i.productId === productId ? { ...i, qty: i.qty + 1 } : i);
     }
+    // 👇 guardamos también el priceId de Stripe
     return [...prev, { productId, priceId: p.stripePriceId, qty: 1 }];
   });
 };
+
 
 
   const changeQty = (productId: string, qty: number) => {
@@ -77,10 +71,10 @@ const addToCart = (productId: string) => {
     setCart(prev => prev.map(i => i.productId === productId ? { ...i, qty } : i));
   };
 
- const checkout = async () => {
+const checkout = async () => {
   if (cart.length === 0) return alert('Your cart is empty');
   try {
-    const payload = { items: cart.map(({ priceId, qty }) => ({ priceId, qty })) };
+    const payload = { items: cart.map(({ priceId, qty }) => ({ priceId, qty })) }; // 👈 solo priceId y qty
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -93,10 +87,12 @@ const addToCart = (productId: string) => {
     const data = await res.json();
     if (data?.url) window.location.href = data.url;
     else throw new Error('No checkout URL received');
-  } catch (err:any) {
+  } catch (err: any) {
     alert(err.message || 'Error during checkout');
   }
 };
+
+
 
 
   return (
