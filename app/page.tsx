@@ -236,7 +236,7 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
       alert(err.message || 'Error during checkout');
     }
 
-  return (
+    return (
     <main style={{ maxWidth: 1000, margin: '0 auto', padding: 16 }}>
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding: '12px 0' }}>
         <h1 style={{ fontSize: 24, fontWeight: 700 }}>LeatherTech Components</h1>
@@ -245,120 +245,89 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
         </button>
       </header>
 
+      {/* ---------- Products ---------- */}
       <section>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin:'16px 0' }}>Products</h2>
-       <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:12 }}>
-  {PRODUCTS.map(p => {
-    // ← NUEVO: calculamos la variante seleccionada y el precio que enviaremos al carrito
-    const v = getSelectedVariant(p);
-    const unitForButton = p.variants?.length
-      ? (priceMap[v?.stripePriceId ?? ''] ?? 0)
-      : p.priceCents;
 
-    return (
-      <article key={p.id} style={{ border:'1px solid #e5e7eb', borderRadius:12, padding:12 }}>
-        {/* === TU BLOQUE DE IMAGEN (sin cambios) === */}
-        <div
-          style={{
-            aspectRatio:'4 / 3',
-            background:'#f3f4f6',
-            borderRadius:8,
-            marginBottom:8,
-            overflow:'hidden',
-            display:'grid',
-            placeItems:'center'
-          }}
-        >
-          {p.image ? (
-            <img
-              src={p.image}
-              alt={p.name}
-              style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
-            />
-          ) : (
-            <span style={{ color:'#6b7280', fontSize:12 }}>Add product photo</span>
-          )}
-        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:12 }}>
+          {PRODUCTS.map(p => {
+            // 👇 calculamos variante seleccionada y precio para el botón
+            const v = getSelectedVariant(p);
+            const unitForButton = p.variants?.length
+              ? (priceMap[v?.stripePriceId ?? ''] ?? 0)
+              : p.priceCents;
 
-        <h3 style={{ fontWeight:600 }}>{p.name}</h3>
-        <p style={{ color:'#6b7280', fontSize:14 }}>{p.description}</p>
+            return (
+              <article key={p.id} style={{ border:'1px solid #e5e7eb', borderRadius:12, padding:12 }}>
+                <div
+                  style={{
+                    aspectRatio:'4 / 3',
+                    background:'#f3f4f6',
+                    borderRadius:8,
+                    marginBottom:8,
+                    overflow:'hidden',
+                    display:'grid',
+                    placeItems:'center'
+                  }}
+                >
+                  {p.image ? (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
+                    />
+                  ) : (
+                    <span style={{ color:'#6b7280', fontSize:12 }}>Add product photo</span>
+                  )}
+                </div>
 
-        {/* Selector SOLO si el producto tiene variantes (Leather Cup Washer) */}
-        {p.variants?.length ? (
-          <div style={{ margin: '8px 0' }}>
-            <label style={{ fontSize:12, color:'#6b7280' }}>Size</label>
-            <select
-              value={selected[p.id] || p.variants[0].id}
-              onChange={e => setSelected(s => ({ ...s, [p.id]: e.target.value }))}
-              style={{ width:'100%', marginTop:4, padding:6, border:'1px solid #e5e7eb', borderRadius:8 }}
-            >
-              {p.variants.map(vr => (
-                <option key={vr.id} value={vr.id}>
-                  {vr.label} — {priceText(vr.stripePriceId)}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
+                <h3 style={{ fontWeight:600 }}>{p.name}</h3>
+                <p style={{ color:'#6b7280', fontSize:14 }}>{p.description}</p>
 
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:8 }}>
-          {/* Precio mostrado: dinámico si hay variantes */}
-          <span style={{ fontWeight:700 }}>
-            {p.variants?.length
-              ? priceText(v?.stripePriceId)
-              : (p.priceCents/100).toFixed(2) + ' €'}
-          </span>
-
-          {/* Enviamos el precio ya calculado para evitar 0,00 € en el carrito */}
-          <button
-            onClick={() => addToCart(p.id, unitForButton)}
-            style={{ padding:'6px 10px', border:'1px solid #111', borderRadius:8, background:'#fff' }}
-          >
-            Add to cart
-          </button>
-        </div>
-      </article>
-    );
-  })}
-</div>
-
-              <h3 style={{ fontWeight:600 }}>{p.name}</h3>
-              <p style={{ color:'#6b7280', fontSize:14 }}>{p.description}</p>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:8 }}>
+                {/* Selector SOLO si el producto tiene variantes (p. ej. Leather Cup Washer) */}
                 {p.variants?.length ? (
-  <div style={{ margin: '8px 0' }}>
-    <label style={{ fontSize:12, color:'#6b7280' }}>Size</label>
-    <select
-      value={selected[p.id] || p.variants[0].id}
-      onChange={e => setSelected(s => ({ ...s, [p.id]: e.target.value }))}
-      style={{ width:'100%', marginTop:4, padding:6, border:'1px solid #e5e7eb', borderRadius:8 }}
-    >
-      {p.variants.map(vr => (
-        <option key={vr.id} value={vr.id}>
-          {vr.label} — {priceText(vr.stripePriceId)}
-        </option>
-      ))}
-    </select>
-  </div>
-) : null}
+                  <div style={{ margin: '8px 0' }}>
+                    <label style={{ fontSize:12, color:'#6b7280' }}>Size</label>
+                    <select
+                      value={selected[p.id] || p.variants[0].id}
+                      onChange={e => setSelected(s => ({ ...s, [p.id]: e.target.value }))}
+                      style={{ width:'100%', marginTop:4, padding:6, border:'1px solid #e5e7eb', borderRadius:8 }}
+                    >
+                      {p.variants.map(vr => (
+                        <option key={vr.id} value={vr.id}>
+                          {vr.label} — {priceText(vr.stripePriceId)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
 
-                <span style={{ fontWeight:700 }}>
-  {p.variants?.length
-    ? priceText(getSelectedVariant(p)?.stripePriceId)
-    : (p.priceCents/100).toFixed(2) + ' €'}
-</span>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:8 }}>
+                  {/* Precio mostrado: dinámico si hay variantes */}
+                  <span style={{ fontWeight:700 }}>
+                    {p.variants?.length
+                      ? priceText(v?.stripePriceId)
+                      : (p.priceCents/100).toFixed(2) + ' €'}
+                  </span>
 
-                <button onClick={() => addToCart(p.id)} style={{ padding:'6px 10px', border:'1px solid #111', borderRadius:8, background:'#fff' }}>
-                  Add to cart
-                </button>
-              </div>
-            </article>
-          ))}
+                  {/* Pasamos el precio ya calculado para evitar 0,00 € en el carrito */}
+                  <button
+                    onClick={() => addToCart(p.id, unitForButton)}
+                    style={{ padding:'6px 10px', border:'1px solid #111', borderRadius:8, background:'#fff' }}
+                  >
+                    Add to cart
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
+      {/* ---------- Cart ---------- */}
       <section style={{ marginTop:24 }}>
         <h2 style={{ fontSize: 18, fontWeight:700, margin:'16px 0' }}>Cart</h2>
+
         {cart.length === 0 ? (
           <p style={{ color:'#6b7280' }}>Your cart is empty.</p>
         ) : (
@@ -366,26 +335,36 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
             {cart.map(item => {
               const p = PRODUCTS.find(pr => pr.id === item.productId)!;
               return (
-                <div key={item.productId} style={{ display:'grid', gridTemplateColumns:'1fr 120px 120px', gap:8, alignItems:'center', padding:'8px 0', borderBottom:'1px solid #f3f4f6' }}>
+                <div key={`${item.productId}-${item.variantLabel || 'base'}`} style={{ display:'grid', gridTemplateColumns:'1fr 120px 120px', gap:8, alignItems:'center', padding:'8px 0', borderBottom:'1px solid #f3f4f6' }}>
                   <div>
-                    <div style={{ fontWeight:600 }}>{p.name}</div>
-                    <div style={{ color:'#6b7280', fontSize:12 }}>{(p.priceCents/100).toFixed(2)} € / unit</div>
+                    <div style={{ fontWeight:600 }}>
+                      {p.name}{item.variantLabel ? ` — ${item.variantLabel}` : ''}
+                    </div>
+                    <div style={{ color:'#6b7280', fontSize:12 }}>
+                      {(item.unitPriceCents/100).toFixed(2)} € / unit
+                    </div>
                   </div>
+
                   <input
                     type="number"
                     min={0}
                     value={item.qty}
-                    onChange={e => changeQty(item.productId, Number(e.target.value))}
+                    onChange={e => changeQty(item.productId, item.variantLabel, Number(e.target.value))}
                     style={{ width:100, padding:6, border:'1px solid #e5e7eb', borderRadius:8 }}
                   />
-                  <div style={{ textAlign:'right', fontWeight:700 }}>{((p.priceCents*item.qty)/100).toFixed(2)} €</div>
+
+                  <div style={{ textAlign:'right', fontWeight:700 }}>
+                    {((item.unitPriceCents*item.qty)/100).toFixed(2)} €
+                  </div>
                 </div>
               );
             })}
+
             <div style={{ display:'flex', justifyContent:'space-between', marginTop:8, fontWeight:700 }}>
               <span>Total</span>
               <span>{(totalCents/100).toFixed(2)} €</span>
             </div>
+
             <div style={{ display:'flex', justifyContent:'flex-end', marginTop:12 }}>
               <button onClick={checkout} style={{ padding: '10px 14px', border: '1px solid #222', background:'#111', color:'#fff', borderRadius: 8 }}>
                 Pay with Stripe
@@ -396,4 +375,4 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
       </section>
     </main>
   );
-}
+} // ← este ÚNICO cierre cierra el componente
