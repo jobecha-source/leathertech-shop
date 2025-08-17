@@ -9,7 +9,7 @@ type Body = { items: { priceId: string; qty: number }[] };
 const bad = (msg: string, code = 400) =>
   NextResponse.json({ error: msg }, { status: code });
 
-// --- Constantes de entorno (fallan rápido si falta algo) ---
+// --- Constantes de entorno ---
 const SECRET = process.env.STRIPE_SECRET_KEY;
 const SUCCESS_URL = process.env.STRIPE_SUCCESS_URL; // ej: https://tu-dominio/success?session_id={CHECKOUT_SESSION_ID}
 const CANCEL_URL = process.env.STRIPE_CANCEL_URL || 'https://example.com/';
@@ -19,28 +19,28 @@ if (!SUCCESS_URL) throw new Error('Falta STRIPE_SUCCESS_URL');
 
 const stripe = new Stripe(SECRET /* , { apiVersion: '2024-06-20' } */);
 
-// --- Listas de países permitidos para dirección de envío ---
+// --- Listas de países ---
 const EU_UK = [
   'ES','PT','FR','DE','IT','AT','BE','BG','HR','CY','CZ','DK','EE','FI','GR',
   'HU','IE','LV','LT','LU','MT','NL','PL','RO','SK','SI','SE','GB','IS','NO','LI','CH',
   'AD','MC','SM','VA','AL','BA','ME','MK','RS','XK',
 ] as const;
 
-const GLOBAL_BÁSICA = [
+const GLOBAL_BASICA = [
   ...EU_UK,
   // América
   'US','CA','MX','AR','BO','BR','CL','CO','CR','DO','EC','GT','HN','JM','NI','PA','PE','PR','PY','SV','UY','VE',
-  // APAC / MENA básicos
+  // APAC / MENA
   'AU','NZ','JP','KR','SG','HK','MY','TH','PH','VN','ID','IN',
   'AE','SA','QA','KW','BH','OM','TR','IL','EG','MA','ZA',
 ] as const;
 
-// Elige aquí: EU_UK o GLOBAL_BÁSICA
-const ALLOWED = GLOBAL_BÁSICA;
+/** ⛔️ QUITAR ESPAÑA (ES) DE LA LISTA PERMITIDA */
+const ALLOWED_NO_ES = (GLOBAL_BASICA as readonly string[]).filter(c => c !== 'ES');
 
 type AllowedCountry =
   Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[];
-const ALLOWED_TYPED = ALLOWED as unknown as AllowedCountry;
+const ALLOWED_TYPED = ALLOWED_NO_ES as unknown as AllowedCountry;
 
 // --- Opciones de envío (importes en céntimos) ---
 const SHIPPING_OPTIONS: Stripe.Checkout.SessionCreateParams.ShippingOption[] = [
@@ -48,21 +48,13 @@ const SHIPPING_OPTIONS: Stripe.Checkout.SessionCreateParams.ShippingOption[] = [
     shipping_rate_data: {
       type: 'fixed_amount',
       fixed_amount: { amount: 500, currency: 'eur' }, // 5,00 €
-      display_name: 'Envío estándar (2–5 días)',
+      display_name: 'Standard shipping (2–5 business days)',
       delivery_estimate: {
         minimum: { unit: 'business_day', value: 2 },
         maximum: { unit: 'business_day', value: 5 },
       },
     },
   },
-  // Descomenta para añadir urgente
-  // {
-  //   shipping_rate_data: {
-  //     type: 'fixed_amount',
-  //     fixed_amount: { amount: 1200, currency: 'eur' }, // 12,00 €
-  //     display_name: 'Envío urgente (24–48h)',
-  //   },
-  // },
 ];
 
 export async function POST(req: NextRequest) {
@@ -72,7 +64,7 @@ export async function POST(req: NextRequest) {
       return bad('No items');
     }
 
-    // Validamos y construimos line_items: solo priceId + quantity
+    // Validamos y construimos line_items
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
     for (const it of body.items) {
       const priceId = String(it?.priceId || '');
@@ -82,7 +74,6 @@ export async function POST(req: NextRequest) {
         return bad(`Invalid priceId format: ${priceId}`);
       }
 
-      // Verificamos que el price existe y es puntual (one_time)
       let price: Stripe.Price;
       try {
         price = await stripe.prices.retrieve(priceId);
@@ -91,52 +82,40 @@ export async function POST(req: NextRequest) {
         return bad(`No such price '${priceId}' en esta cuenta/modo. ${msg}`);
       }
       if (!price.active) return bad(`Price '${priceId}' is inactive`);
-      if (price.type !== 'one_time')
-        return bad(`Price '${priceId}' is recurring; only one-time allowed`);
+      if (price.type !== 'one_time') return bad(`Price '${priceId}' is recurring; only one-time allowed`);
 
       line_items.push({ price: priceId, quantity: qty });
     }
 
-    // Creamos la sesión de Checkout
+    // Crear sesión de Checkout
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       submit_type: 'pay',
-      locale: 'es', // 'es' (no 'es-ES')
+      locale: 'en',                       // 👉 tienda en inglés
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
       line_items,
 
       // Datos del cliente
-      customer_creation: 'always',            // crea/asocia Customer para recibos
-      billing_address_collection: 'required', // pide dirección de facturación
+      customer_creation: 'always',
+      billing_address_collection: 'required',
       phone_number_collection: { enabled: true },
-      // tax_id_collection: { enabled: true }, // si quieres NIF/VAT
 
-      // Dirección de envío y opciones
+      // Envío — España ya no aparecerá en el desplegable
       shipping_address_collection: { allowed_countries: ALLOWED_TYPED },
       shipping_options: SHIPPING_OPTIONS,
 
-      // Campos extra opcionales visibles en Checkout
+      // Campos extra opcionales
       custom_fields: [
         {
           key: 'province',
-          label: { type: 'custom', custom: 'Provincia' },
+          label: { type: 'custom', custom: 'State/Province' },
           type: 'text',
           optional: true,
         },
-        // {
-        //   key: 'nif',
-        //   label: { type: 'custom', custom: 'NIF/CIF' },
-        //   type: 'text',
-        //   optional: true,
-        // },
       ],
 
-      // Opcionales
       allow_promotion_codes: true,
-      // automatic_tax: { enabled: true }, // si usas Stripe Tax
-
-      // Útil para trazabilidad en Dashboard/Webhooks
       metadata: { cart: JSON.stringify(body.items) },
     });
 
@@ -146,3 +125,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
+
