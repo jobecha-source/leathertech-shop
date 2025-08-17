@@ -122,13 +122,13 @@ const priceText = (priceId?: string, fallbackCents = 0) => {
     }, 0);
   }, [cart]);
 
-// Añadir al carrito (acepta precio forzado para evitar 0,00 €)
+// ✅ Reemplaza TODO tu addToCart por esto (dentro del componente)
 const addToCart = (productId: string, forcedUnitCents?: number) => {
-  // <- Aseguramos que p existe en este scope
+  // p EXISTE aquí
   const p = PRODUCTS.find(pr => pr.id === productId);
   if (!p) return;
 
-  // --- productos CON variantes (ej. cup-washer) ---
+  // --- productos CON variantes (ej. Leather Cup Washer) ---
   if (p.variants && p.variants.length) {
     const v = getSelectedVariant(p)!;
     const fromMap = priceMap[v.stripePriceId];
@@ -159,11 +159,11 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
         },
       ];
     });
-    return;
+    return; // 👈 importante
   }
 
   // --- productos SIN variantes (los demás) ---
-  const unit = typeof forcedUnitCents === 'number' ? forcedUnitCents : p.priceCents; // <- aquí ya existe p
+  const unit = typeof forcedUnitCents === 'number' ? forcedUnitCents : p.priceCents; // <- aquí usamos p
   if (!unit || unit <= 0) {
     alert('El precio del producto no está disponible.');
     return;
@@ -185,27 +185,6 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
         priceId: p.stripePriceId,
         qty: 1,
         unitPriceCents: unit,
-      },
-    ];
-  });
-};
-
-  // --- productos SIN variantes (los demás) ---
-  const unit = p.priceCents; // usa el precio base del producto
-  setCart(prev => {
-    const found = prev.find(i => i.productId === productId && !i.variantLabel);
-    if (found) {
-      return prev.map(i =>
-        (i.productId === productId && !i.variantLabel) ? { ...i, qty: i.qty + 1 } : i
-      );
-    }
-    return [
-      ...prev,
-      {
-        productId,
-        priceId: p.stripePriceId,
-        qty: 1,
-        unitPriceCents: unit,   // <-- ¡este campo faltaba!
       },
     ];
   });
