@@ -122,15 +122,20 @@ const priceText = (priceId?: string, fallbackCents = 0) => {
     }, 0);
   }, [cart]);
 
- const addToCart = (productId: string) => {
+const addToCart = (productId: string, forcedUnitCents?: number) => {
   const p = PRODUCTS.find(pr => pr.id === productId);
   if (!p) return;
 
   // --- productos CON variantes (ej. cup-washer) ---
   if (p.variants && p.variants.length) {
     const v = getSelectedVariant(p)!;
-    const unit = priceMap[v.stripePriceId] ?? 0; // céntimos
-    if (unit <= 0) { alert('Price not loaded yet. Please try again in 1–2s.'); return; }
+    const fromMap = priceMap[v.stripePriceId];
+    const unit = (typeof forcedUnitCents === 'number' ? forcedUnitCents : fromMap) ?? 0;
+
+    if (!unit || unit <= 0) {
+      alert('El precio aún no se ha cargado. Espera 1–2s y vuelve a intentarlo.');
+      return;
+    }
 
     setCart(prev => {
       const found = prev.find(i => i.productId === p.id && i.variantLabel === v.label);
@@ -152,6 +157,33 @@ const priceText = (priceId?: string, fallbackCents = 0) => {
     });
     return;
   }
+
+  // --- productos SIN variantes (los demás) ---
+  const unit = typeof forcedUnitCents === 'number' ? forcedUnitCents : p.priceCents;
+  if (!unit || unit <= 0) {
+    alert('El precio del producto no está disponible.');
+    return;
+  }
+
+  setCart(prev => {
+    const found = prev.find(i => i.productId === productId && !i.variantLabel);
+    if (found) {
+      return prev.map(i =>
+        (i.productId === productId && !i.variantLabel) ? { ...i, qty: i.qty + 1 } : i
+      );
+    }
+    return [
+      ...prev,
+      {
+        productId,
+        priceId: p.stripePriceId,
+        qty: 1,
+        unitPriceCents: unit,
+      },
+    ];
+  });
+};
+
 
   // --- productos SIN variantes (los demás) ---
   const unit = p.priceCents; // usa el precio base del producto
