@@ -122,7 +122,9 @@ const priceText = (priceId?: string, fallbackCents = 0) => {
     }, 0);
   }, [cart]);
 
+// Añadir al carrito (acepta precio forzado para evitar 0,00 €)
 const addToCart = (productId: string, forcedUnitCents?: number) => {
+  // <- Aseguramos que p existe en este scope
   const p = PRODUCTS.find(pr => pr.id === productId);
   if (!p) return;
 
@@ -141,7 +143,9 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
       const found = prev.find(i => i.productId === p.id && i.variantLabel === v.label);
       if (found) {
         return prev.map(i =>
-          (i.productId === p.id && i.variantLabel === v.label) ? { ...i, qty: i.qty + 1 } : i
+          (i.productId === p.id && i.variantLabel === v.label)
+            ? { ...i, qty: i.qty + 1 }
+            : i
         );
       }
       return [
@@ -159,7 +163,7 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
   }
 
   // --- productos SIN variantes (los demás) ---
-  const unit = typeof forcedUnitCents === 'number' ? forcedUnitCents : p.priceCents;
+  const unit = typeof forcedUnitCents === 'number' ? forcedUnitCents : p.priceCents; // <- aquí ya existe p
   if (!unit || unit <= 0) {
     alert('El precio del producto no está disponible.');
     return;
@@ -169,7 +173,9 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
     const found = prev.find(i => i.productId === productId && !i.variantLabel);
     if (found) {
       return prev.map(i =>
-        (i.productId === productId && !i.variantLabel) ? { ...i, qty: i.qty + 1 } : i
+        (i.productId === productId && !i.variantLabel)
+          ? { ...i, qty: i.qty + 1 }
+          : i
       );
     }
     return [
@@ -183,7 +189,6 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
     ];
   });
 };
-
 
   // --- productos SIN variantes (los demás) ---
   const unit = p.priceCents; // usa el precio base del producto
