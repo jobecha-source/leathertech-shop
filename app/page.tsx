@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 
-
 export type Variant = {
   id: string;
   label: string;
@@ -15,41 +14,38 @@ export type Product = {
   priceCents: number;
   stripePriceId: string;
   image?: string;
-  variants?: Variant[];   // si existe, el producto tiene medidas
+  variants?: Variant[];
 };
 
 export type CartItem = {
   productId: string;
   priceId: string;
   qty: number;
-  unitPriceCents: number; // precio unitario en céntimos
-  variantLabel?: string;  // p.ej. 'Ø50 mm (1.97")' (solo cuando hay medidas)
+  unitPriceCents: number;
+  variantLabel?: string;
 };
 
-
 const PRODUCTS: Product[] = [
- {
-  id: 'cup-washer',
-  name: 'Leather Cup Washer',
-  description: 'Leather cup washer for sprayer pumps (Hardi, Ilemo, Mañez y Lozano, Abella).',
-  // priceCents y stripePriceId se ignoran cuando hay variants, pero mantenlos para compatibilidad:
-  priceCents: 0,
-  stripePriceId: 'price_placeholder',
-  image: '/Ilemos%202.JPG',
-  variants: [
-    { id: 'd45', label: 'Ø45 mm (1.77")', stripePriceId: 'price_1RwS0lKpM0dEkwAqGpLvj7se' },
-    { id: 'd50', label: 'Ø50 mm (1.97")', stripePriceId: 'price_1RwflJKpM0dEkwAqyfVOlu4i' },
-    { id: 'd55', label: 'Ø55 mm (2.17")', stripePriceId: 'price_1RwflJKpM0dEkwAqQ2u4z7rN' },
-    { id: 'd60', label: 'Ø60 mm (2.36")', stripePriceId: 'price_1RwflJKpM0dEkwAq2oDqTNbZ' },
-  ],
-},
-
+  {
+    id: 'cup-washer',
+    name: 'Leather Cup Washer',
+    description: 'Leather cup washer for sprayer pumps (Hardi, Ilemo, Mañez y Lozano, Abella).',
+    priceCents: 0,
+    stripePriceId: 'price_placeholder',
+    image: '/Ilemos%202.JPG',
+    variants: [
+      { id: 'd45', label: 'Ø45 mm (1.77\")', stripePriceId: 'price_1RwS0lKpM0dEkwAqGpLvj7se' },
+      { id: 'd50', label: 'Ø50 mm (1.97\")', stripePriceId: 'price_1RwflJKpM0dEkwAqyfVOlu4i' },
+      { id: 'd55', label: 'Ø55 mm (2.17\")', stripePriceId: 'price_1RwflJKpM0dEkwAqQ2u4z7rN' },
+      { id: 'd60', label: 'Ø60 mm (2.36\")', stripePriceId: 'price_1RwflJKpM0dEkwAq2oDqTNbZ' },
+    ],
+  },
   {
     id: 'valve-leather',
     name: 'Valve Leather Disc',
     description: 'Smooth finish, controlled flatness for valves & compressors.',
     priceCents: 400,
-    stripePriceId: 'price_1RwS1dKpM0dEkwAqj82rF4Ea', // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_1RwS1dKpM0dEkwAqj82rF4Ea',
     image: '/Cierre%20valvula.JPG',
   },
   {
@@ -57,93 +53,113 @@ const PRODUCTS: Product[] = [
     name: 'Leather Washer',
     description: 'Custom die-cut washers for restoration & OEM needs.',
     priceCents: 400,
-    stripePriceId: 'price_1RwS2iKpM0dEkwAqNgWt778n', // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_1RwS2iKpM0dEkwAqNgWt778n',
     image: '/Racort.JPG',
   },
   {
-    id: 'leather-cone-cup', // sin espacios
+    id: 'leather-cone-cup',
     name: 'Leather cone cup',
     description: 'Cone cup for pumps/valves. Custom OD/ID.',
     priceCents: 600,
-    stripePriceId: 'price_1Rwe7xKpM0dEkwAqi1ZgCkAZ', // <-- PON AQUÍ TU price_ REAL
+    stripePriceId: 'price_1Rwe7xKpM0dEkwAqi1ZgCkAZ',
     image: '/Sombreretes.JPG',
   },
 ];
 
-
-
 export default function Page() {
   const [cart, setCart] = useState<CartItem[]>([]);
+
   // === PASO 3 · PRECIOS DE VARIANTES ===
-const [selected, setSelected] = useState<Record<string, string>>(
-  Object.fromEntries(
-    PRODUCTS.map(p => [p.id, p.variants && p.variants.length ? p.variants[0].id : ''])
-  )
-);
+  const [selected, setSelected] = useState<Record<string, string>>(
+    Object.fromEntries(
+      PRODUCTS.map(p => [p.id, p.variants && p.variants.length ? p.variants[0].id : ''])
+    )
+  );
 
-const [priceMap, setPriceMap] = useState<Record<string, number>>({});
-const [priceError, setPriceError] = useState<string | null>(null);
+  const [priceMap, setPriceMap] = useState<Record<string, number>>({});
+  const [priceError, setPriceError] = useState<string | null>(null);
 
-// Carga precios reales desde Stripe (vía /api/prices)
-useEffect(() => {
-  const allIds = PRODUCTS.flatMap(p => p.variants?.map(v => v.stripePriceId) || []);
-  if (allIds.length === 0) return;
+  useEffect(() => {
+    const allIds = PRODUCTS.flatMap(p => p.variants?.map(v => v.stripePriceId) || []);
+    if (allIds.length === 0) return;
 
-  fetch('/api/prices?ids=' + allIds.join(','))
-    .then(async r => {
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
-    })
-    .then(m => setPriceMap(m))
-    .catch(e => {
-      console.error('Price fetch failed', e);
-      setPriceError('No se pudieron cargar los precios');
-    });
-}, []);
+    fetch('/api/prices?ids=' + allIds.join(','))
+      .then(async r => {
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      })
+      .then(m => setPriceMap(m))
+      .catch(e => {
+        console.error('Price fetch failed', e);
+        setPriceError('No se pudieron cargar los precios');
+      });
+  }, []);
 
-const getSelectedVariant = (p: Product) => {
-  if (!p.variants || p.variants.length === 0) return undefined;
-  const chosen = selected[p.id] || p.variants[0].id;
-  return p.variants.find(v => v.id === chosen) || p.variants[0];
-};
+  const getSelectedVariant = (p: Product) => {
+    if (!p.variants || p.variants.length === 0) return undefined;
+    const chosen = selected[p.id] || p.variants[0].id;
+    return p.variants.find(v => v.id === chosen) || p.variants[0];
+  };
 
-const priceText = (priceId?: string, fallbackCents = 0) => {
-  if (!priceId) return (fallbackCents/100).toFixed(2) + ' €';
-  if (priceMap[priceId] != null) return (priceMap[priceId] / 100).toFixed(2) + ' €';
-  if (priceError) return '—';
-  return '…'; // cargando
-};
-
+  const priceText = (priceId?: string, fallbackCents = 0) => {
+    if (!priceId) return (fallbackCents/100).toFixed(2) + ' €';
+    if (priceMap[priceId] != null) return (priceMap[priceId] / 100).toFixed(2) + ' €';
+    if (priceError) return '—';
+    return '…';
+  };
 
   const totalCents = useMemo(() => {
-    return cart.reduce((sum, item) => {
-      const p = PRODUCTS.find(pr => pr.id === item.productId);
-      return sum + (p ? p.priceCents * item.qty : 0);
-    }, 0);
+    return cart.reduce((sum, item) => sum + item.unitPriceCents * item.qty, 0);
   }, [cart]);
 
-// ✅ Reemplaza TODO tu addToCart por esto (dentro del componente)
-const addToCart = (productId: string, forcedUnitCents?: number) => {
-  // p EXISTE aquí
-  const p = PRODUCTS.find(pr => pr.id === productId);
-  if (!p) return;
+  const addToCart = (productId: string, forcedUnitCents?: number) => {
+    const p = PRODUCTS.find(pr => pr.id === productId);
+    if (!p) return;
 
-  // --- productos CON variantes (ej. Leather Cup Washer) ---
-  if (p.variants && p.variants.length) {
-    const v = getSelectedVariant(p)!;
-    const fromMap = priceMap[v.stripePriceId];
-    const unit = (typeof forcedUnitCents === 'number' ? forcedUnitCents : fromMap) ?? 0;
+    if (p.variants && p.variants.length) {
+      const v = getSelectedVariant(p)!;
+      const fromMap = priceMap[v.stripePriceId];
+      const unit = (typeof forcedUnitCents === 'number' ? forcedUnitCents : fromMap) ?? 0;
 
+      if (!unit || unit <= 0) {
+        alert('El precio aún no se ha cargado. Espera 1–2s y vuelve a intentarlo.');
+        return;
+      }
+
+      setCart(prev => {
+        const found = prev.find(i => i.productId === p.id && i.variantLabel === v.label);
+        if (found) {
+          return prev.map(i =>
+            (i.productId === p.id && i.variantLabel === v.label)
+              ? { ...i, qty: i.qty + 1 }
+              : i
+          );
+        }
+        return [
+          ...prev,
+          {
+            productId: p.id,
+            priceId: v.stripePriceId,
+            qty: 1,
+            unitPriceCents: unit,
+            variantLabel: v.label,
+          },
+        ];
+      });
+      return;
+    }
+
+    const unit = typeof forcedUnitCents === 'number' ? forcedUnitCents : p.priceCents;
     if (!unit || unit <= 0) {
-      alert('El precio aún no se ha cargado. Espera 1–2s y vuelve a intentarlo.');
+      alert('El precio del producto no está disponible.');
       return;
     }
 
     setCart(prev => {
-      const found = prev.find(i => i.productId === p.id && i.variantLabel === v.label);
+      const found = prev.find(i => i.productId === productId && !i.variantLabel);
       if (found) {
         return prev.map(i =>
-          (i.productId === p.id && i.variantLabel === v.label)
+          (i.productId === productId && !i.variantLabel)
             ? { ...i, qty: i.qty + 1 }
             : i
         );
@@ -151,58 +167,30 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
       return [
         ...prev,
         {
-          productId: p.id,
-          priceId: v.stripePriceId,
+          productId,
+          priceId: p.stripePriceId,
           qty: 1,
           unitPriceCents: unit,
-          variantLabel: v.label,
         },
       ];
     });
-    return; // 👈 importante
-  }
+  };
 
-  // --- productos SIN variantes (los demás) ---
-  const unit = typeof forcedUnitCents === 'number' ? forcedUnitCents : p.priceCents; // <- aquí usamos p
-  if (!unit || unit <= 0) {
-    alert('El precio del producto no está disponible.');
-    return;
-  }
-
-  setCart(prev => {
-    const found = prev.find(i => i.productId === productId && !i.variantLabel);
-    if (found) {
-      return prev.map(i =>
-        (i.productId === productId && !i.variantLabel)
-          ? { ...i, qty: i.qty + 1 }
-          : i
-      );
-    }
-    return [
-      ...prev,
-      {
-        productId,
-        priceId: p.stripePriceId,
-        qty: 1,
-        unitPriceCents: unit,
-      },
-    ];
-  });
-};
-
-
-  const changeQty = (productId: string, qty: number) => {
+  const changeQty = (productId: string, variantLabel: string | undefined, qty: number) => {
     if (qty <= 0) {
-      setCart(prev => prev.filter(i => i.productId !== productId));
+      setCart(prev => prev.filter(i => !(i.productId === productId && i.variantLabel === variantLabel)));
     } else {
-      setCart(prev => prev.map(i => i.productId === productId ? { ...i, qty } : i));
+      setCart(prev => prev.map(i =>
+        (i.productId === productId && i.variantLabel === variantLabel)
+          ? { ...i, qty }
+          : i
+      ));
     }
   };
 
   const checkout = async () => {
     if (cart.length === 0) return alert('Your cart is empty');
     try {
-      // El backend espera [{ priceId, qty }]
       const payload = { items: cart.map(({ priceId, qty }) => ({ priceId, qty })) };
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -219,8 +207,9 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
     } catch (err: any) {
       alert(err.message || 'Error during checkout');
     }
+  };
 
-    return (
+  return (
     <main style={{ maxWidth: 1000, margin: '0 auto', padding: 16 }}>
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding: '12px 0' }}>
         <h1 style={{ fontSize: 24, fontWeight: 700 }}>LeatherTech Components</h1>
@@ -229,13 +218,11 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
         </button>
       </header>
 
-      {/* ---------- Products ---------- */}
       <section>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin:'16px 0' }}>Products</h2>
 
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:12 }}>
           {PRODUCTS.map(p => {
-            // 👇 calculamos variante seleccionada y precio para el botón
             const v = getSelectedVariant(p);
             const unitForButton = p.variants?.length
               ? (priceMap[v?.stripePriceId ?? ''] ?? 0)
@@ -268,7 +255,6 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
                 <h3 style={{ fontWeight:600 }}>{p.name}</h3>
                 <p style={{ color:'#6b7280', fontSize:14 }}>{p.description}</p>
 
-                {/* Selector SOLO si el producto tiene variantes (p. ej. Leather Cup Washer) */}
                 {p.variants?.length ? (
                   <div style={{ margin: '8px 0' }}>
                     <label style={{ fontSize:12, color:'#6b7280' }}>Size</label>
@@ -287,14 +273,11 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
                 ) : null}
 
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:8 }}>
-                  {/* Precio mostrado: dinámico si hay variantes */}
                   <span style={{ fontWeight:700 }}>
                     {p.variants?.length
                       ? priceText(v?.stripePriceId)
                       : (p.priceCents/100).toFixed(2) + ' €'}
                   </span>
-
-                  {/* Pasamos el precio ya calculado para evitar 0,00 € en el carrito */}
                   <button
                     onClick={() => addToCart(p.id, unitForButton)}
                     style={{ padding:'6px 10px', border:'1px solid #111', borderRadius:8, background:'#fff' }}
@@ -308,7 +291,6 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
         </div>
       </section>
 
-      {/* ---------- Cart ---------- */}
       <section style={{ marginTop:24 }}>
         <h2 style={{ fontSize: 18, fontWeight:700, margin:'16px 0' }}>Cart</h2>
 
@@ -359,4 +341,4 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
       </section>
     </main>
   );
-} // ← este ÚNICO cierre cierra el componente
+}
