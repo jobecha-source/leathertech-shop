@@ -235,7 +235,6 @@ const addToCart = (productId: string, forcedUnitCents?: number) => {
     } catch (err: any) {
       alert(err.message || 'Error during checkout');
     }
-  };
 
   return (
     <main style={{ maxWidth: 1000, margin: '0 auto', padding: 16 }}>
